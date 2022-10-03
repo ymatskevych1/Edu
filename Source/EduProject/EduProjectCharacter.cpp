@@ -3,7 +3,6 @@
 #include "EduProjectCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "Components/EduFallingDamageComponent.h"
 #include "Components/EduHealthComponent.h"
 #include "Components/InputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -39,9 +38,6 @@ AEduProjectCharacter::AEduProjectCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
-
-	FallingDamageComponent = CreateDefaultSubobject<UEduFallingDamageComponent>(TEXT("FallingDamageComponent"));
-	FallingDamageComponent->PrimaryComponentTick.bCanEverTick = true;
 	
 	HealthComponent = CreateDefaultSubobject<UEduHealthComponent>(TEXT("HealthComponent"));
 	
@@ -63,6 +59,22 @@ void AEduProjectCharacter::SetupPlayerInputComponent(class UInputComponent* Play
 
 	PlayerInputComponent->BindTouch(IE_Pressed, this, &AEduProjectCharacter::TouchStarted);
 	PlayerInputComponent->BindTouch(IE_Released, this, &AEduProjectCharacter::TouchStopped);
+}
+
+void AEduProjectCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	LandedDelegate.AddDynamic(this, &AEduProjectCharacter::OnCharacterLanded);
+}
+
+void AEduProjectCharacter::OnCharacterLanded(const FHitResult& Hit)
+{
+	const float Speed = GetVelocity().Length();
+	if (Speed > MinSpeed)
+	{
+		HealthComponent->DealDamage(Speed * DamageCoefficient);	
+	}
 }
 
 void AEduProjectCharacter::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
@@ -109,40 +121,3 @@ void AEduProjectCharacter::MoveRight(float Value)
 	}
 }
 #pragma endregion UE_Template
-
-void AEduProjectCharacter::BeginPlay()
-{
-	Super::BeginPlay();
-
-	FallingDamageComponent->Initialize(HealthComponent, GetMovementComponent());
-}
-
-void AEduProjectCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
-{
-	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
-
-	auto* MovementComponent = Cast<UCharacterMovementComponent>(GetMovementComponent());
-	if (!IsValid(MovementComponent))
-	{
-		ensureMsgf(false, TEXT("[AEduProjectCharacter]: MovementComponent is invalid"));
-		return;
-	}
-
-	if (PrevMovementMode == EMovementMode::MOVE_Falling)
-	{
-		FallingDamageComponent->CalculateFalling();
-	}
-	
-	switch (MovementComponent->MovementMode)
-	{
-	case EMovementMode::MOVE_Falling:
-		{
-			FallingDamageComponent->ShouldTrackFalling(true);
-			break;
-		}
-	default:
-		{
-			FallingDamageComponent->ShouldTrackFalling(false);
-		}
-	}
-}

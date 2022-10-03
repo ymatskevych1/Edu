@@ -15,9 +15,6 @@ class AEduProjectCharacter : public ACharacter
 	class USpringArmComponent* CameraBoom;
 
 	UPROPERTY(VisibleAnywhere)
-	class UEduFallingDamageComponent* FallingDamageComponent;
-
-	UPROPERTY(VisibleAnywhere)
 	class UEduHealthComponent* HealthComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
@@ -50,6 +47,16 @@ public:
 public:
 
 	virtual void BeginPlay() override;
-	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode) override;
+	
+private:
+
+	UFUNCTION()
+	virtual void OnCharacterLanded(const FHitResult& Hit);
+
+	UPROPERTY(EditAnywhere, Category = "Fall Damage", meta = (ClampMin = 0.f))
+	float MinSpeed = 0.f;
+
+	UPROPERTY(EditAnywhere, Category = "Fall Damage", meta = (ClampMin = 0.01f, ClampMax = 1.f))
+	float DamageCoefficient = 1.f;
 };
 
