@@ -14,6 +14,12 @@ class AEduProjectCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* CameraBoom;
 
+	UPROPERTY(VisibleAnywhere)
+	class UEduFallingDamageComponent* FallingDamageComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	class UEduHealthComponent* HealthComponent;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
 public:
@@ -44,5 +50,6 @@ public:
 public:
 
 	virtual void BeginPlay() override;
+	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode) override;
 };
 
